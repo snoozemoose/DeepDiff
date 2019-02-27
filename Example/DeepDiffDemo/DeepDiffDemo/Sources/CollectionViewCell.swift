@@ -20,3 +20,18 @@ class CollectionViewCell: UICollectionViewCell {
     label.textColor = .white
   }
 }
+
+class SectionHeaderView: UICollectionReusableView {
+    let label = UILabel()
+    func setup() {
+        label.textColor = .black
+        addSubview(label)
+        activate(
+            label.anchor.center
+        )
+    }
+
+    func update(title: String) {
+        label.text = title
+    }
+}

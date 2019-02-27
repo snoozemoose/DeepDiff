@@ -5,7 +5,7 @@ import Anchors
 class CollectionViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
   var collectionView: UICollectionView!
-  var items: [Int] = []
+  var sections = [Section<String, Int>]()
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -14,6 +14,9 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
     let layout = UICollectionViewFlowLayout()
     layout.minimumLineSpacing = 10
     layout.minimumInteritemSpacing = 10
+
+    sections = [Section<String, Int>(id: "First section", items: []),
+                Section<String, Int>(id: "Second section", items: [])]
 
     collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.dataSource = self
@@ -26,6 +29,8 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
       collectionView.anchor.edges
     )
 
+    collectionView.register(SectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "headerView")
+    (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).headerReferenceSize = CGSize(width: 100, height: 50)
     collectionView.register(CollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
     navigationItem.rightBarButtonItem = UIBarButtonItem(
       title: "Reload", style: .plain, target: self, action: #selector(reload)
@@ -33,37 +38,59 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
   }
 
   @objc func reload() {
-    let oldItems = self.items
-    let items = DataSet.generateItems()
-    let changes = diff(old: oldItems, new: items)
+    replaceItemsInFirstSectionAndReplaceSecondSection()
+  }
+
+  func replaceItemsInFirstSectionAndReplaceSecondSection() {
+    let oldSections = self.sections
+    var newSections = self.sections
+    newSections[0].items = DataSet.generateItems()
+    newSections[1] = Section<String, Int>(id: String("Random section #\(arc4random())"), items: DataSet.generateItems())
+    let changes = diff(old: self.sections, new: newSections)
 
     let exception = tryBlock {
-      self.collectionView.reload(changes: changes, updateData: {
-        self.items = items
+      self.collectionView.reloadSections(changes: changes, updateData: {
+        self.sections = newSections
       })
     }
 
     if let exception = exception {
       print(exception as Any)
-      print(oldItems)
-      print(items)
+      print(oldSections)
+      print(newSections)
       print(changes)
     }
   }
 
   // MARK: - UICollectionViewDataSource
 
+  func numberOfSections(in collectionView: UICollectionView) -> Int {
+    return sections.count
+  }
+
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return items.count
+    return sections[section].items.count
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! CollectionViewCell
-    let item = items[indexPath.item]
+    let item = sections[indexPath.section].items[indexPath.item]
 
     cell.label.text = "\(item)"
 
     return cell
+  }
+
+  func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+    let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader,
+                                                                     withReuseIdentifier: "headerView",
+                                                                     for: indexPath) as! SectionHeaderView
+    headerView.setup()
+    return headerView
+  }
+
+  func collectionView(_ collectionView: UICollectionView, willDisplaySupplementaryView view: UICollectionReusableView, forElementKind elementKind: String, at indexPath: IndexPath) {
+    (view as! SectionHeaderView).update(title: sections[indexPath.section].id)
   }
 
   // MARK: - UICollectionViewDelegateFlowLayout
