@@ -5,7 +5,7 @@ import Anchors
 class CollectionViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
   var collectionView: UICollectionView!
-  var sections = [Section<String, Int>]()
+  var sections = [DiffAwareSection<String, Int>]()
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -15,8 +15,8 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
     layout.minimumLineSpacing = 10
     layout.minimumInteritemSpacing = 10
 
-    sections = [Section<String, Int>(id: "First section", items: []),
-                Section<String, Int>(id: "Second section", items: [])]
+    sections = [DiffAwareSection<String, Int>(id: "First section", items: []),
+                DiffAwareSection<String, Int>(id: "Second section", items: [])]
 
     collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.dataSource = self
@@ -45,7 +45,7 @@ class CollectionViewController: UIViewController, UICollectionViewDataSource, UI
     let oldSections = self.sections
     var newSections = self.sections
     newSections[0].items = DataSet.generateItems()
-    newSections[1] = Section<String, Int>(id: String("Random section #\(arc4random())"), items: DataSet.generateItems())
+    newSections[1] = DiffAwareSection<String, Int>(id: String("Random section #\(arc4random())"), items: DataSet.generateItems())
     let changes = diff(old: self.sections, new: newSections)
 
     let exception = tryBlock {

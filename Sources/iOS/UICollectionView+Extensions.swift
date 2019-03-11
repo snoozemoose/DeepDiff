@@ -61,7 +61,7 @@ public extension UICollectionView {
   }
 }
 
-public struct Section<T: DiffAware, U: DiffAware>: DiffAware {
+public struct DiffAwareSection<T: DiffAware, U: DiffAware>: DiffAware {
   public let id: T
   public var items: [U]
 
@@ -72,7 +72,7 @@ public struct Section<T: DiffAware, U: DiffAware>: DiffAware {
 
   public var diffId: Int { return id.diffId }
 
-  public static func compareContent(_ a: Section, _ b: Section) -> Bool {
+  public static func compareContent(_ a: DiffAwareSection, _ b: DiffAwareSection) -> Bool {
     return T.compareContent(a.id, b.id) &&
       a.items.count == b.items.count &&
       a.items.enumerated().allSatisfy { U.compareContent($0.element, b.items[$0.offset]) }
@@ -83,7 +83,7 @@ public extension UICollectionView {
 
   // Reload sections
   public func reloadSections<T: DiffAware, U: DiffAware> (
-    changes: [Change<Section<T, U>>],
+    changes: [Change<DiffAwareSection<T, U>>],
     updateData: () -> Void,
     completion: ((Bool) -> Void)? = nil) {
 
@@ -126,7 +126,7 @@ public extension UICollectionView {
 //  }
 
   private func sectionReloads<T: DiffAware, U: DiffAware>(
-    changes: [Change<Section<T, U>>]) -> (insideChanges: () -> (), outSideChanges: () -> ()) {
+    changes: [Change<DiffAwareSection<T, U>>]) -> (insideChanges: () -> (), outSideChanges: () -> ()) {
 
     let replaces = changes.filter({ return $0.replace != nil })
     let itemChangesMap = replaces.reduce(into: [Int : [Change<U>]]()) {
