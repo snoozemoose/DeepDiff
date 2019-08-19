@@ -218,6 +218,7 @@ class HeckelTests: XCTestCase {
     XCTAssertNotNil(changes[1].insert)
   }
 
+
   func testObject() {
     let old = [
       User(id: 1, name: "a"),
@@ -233,8 +234,35 @@ class HeckelTests: XCTestCase {
     let changes = diff(old: old, new: new)
     XCTAssertEqual(changes.count, 2)
 
-    XCTAssertNotNil(changes[0].replace)
-    XCTAssertNotNil(changes[1].insert)
+    XCTAssertEqual(changes[0].replace?.oldItem, User(id: 2, name: "b"))
+    XCTAssertEqual(changes[0].replace?.newItem, User(id: 2, name: "a"))
+    XCTAssertEqual(changes[0].replace?.index, 1)
+
+    XCTAssertEqual(changes[1].insert?.item, User(id: 3, name: "c"))
+    XCTAssertEqual(changes[1].insert?.index, 2)
+  }
+
+  func testInsertInFrontOfReplace() {
+    let old = [
+      User(id: 1, name: "a"),
+      User(id: 2, name: "b")
+    ]
+
+    let new = [
+      User(id: 1, name: "a"),
+      User(id: 3, name: "c"),
+      User(id: 2, name: "a")
+    ]
+
+    let changes = diff(old: old, new: new)
+    XCTAssertEqual(changes.count, 2)
+
+    XCTAssertEqual(changes[0].insert?.item, User(id: 3, name: "c"))
+    XCTAssertEqual(changes[0].insert?.index, 1)
+
+    XCTAssertEqual(changes[1].replace?.oldItem, User(id: 2, name: "b"))
+    XCTAssertEqual(changes[1].replace?.newItem, User(id: 2, name: "a"))
+    XCTAssertEqual(changes[1].replace?.index, 1)
   }
 
   func testMoveWithInsertDelete() {

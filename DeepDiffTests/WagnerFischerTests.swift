@@ -215,6 +215,30 @@ class WagnerFischerTests: XCTestCase {
     XCTAssertEqual(changes[1].insert?.index, 2)
   }
 
+  func testInsertInFrontOfReplace() {
+    let old = [
+      User(id: 1, name: "a"),
+      User(id: 2, name: "b")
+    ]
+
+    let new = [
+      User(id: 1, name: "a"),
+      User(id: 3, name: "c"),
+      User(id: 2, name: "a")
+    ]
+
+    let changes = diffWF(old: old, new: new)
+    XCTAssertEqual(changes.count, 2)
+
+    // I can't get these to work even if I change the replace-index to before-update index
+    XCTAssertEqual(changes[0].insert?.item, User(id: 3, name: "c"))
+    XCTAssertEqual(changes[0].insert?.index, 1)
+
+    XCTAssertEqual(changes[1].replace?.oldItem, User(id: 2, name: "b"))
+    XCTAssertEqual(changes[1].replace?.newItem, User(id: 2, name: "a"))
+    XCTAssertEqual(changes[1].replace?.index, 1)
+  }
+
   func testObjectReplace() {
     let old = [
       User(id: 1, name: "a"),

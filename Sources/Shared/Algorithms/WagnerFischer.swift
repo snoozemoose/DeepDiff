@@ -133,7 +133,7 @@ class Row<T> {
     case topLeftSlot.count:
       slots[slotIndex] = combine(
         slot: topLeftSlot,
-        change: .replace(Replace(oldItem: oldItem, newItem: newItem, index: indexInNew))
+        change: .replace(Replace(oldItem: oldItem, newItem: newItem, index: indexInOld))
       )
     default:
       assertionFailure()

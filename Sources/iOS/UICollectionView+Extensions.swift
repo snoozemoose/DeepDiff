@@ -23,31 +23,49 @@ public extension UICollectionView {
     section: Int = 0,
     updateData: () -> Void,
     completion: ((Bool) -> Void)? = nil) {
-    
+
     let changesWithIndexPath = IndexPathConverter().convert(changes: changes, section: section)
-    
+
+    let group = DispatchGroup()
+    var insertDeleteMoveFinished = false
+    var reloadFinished = false
+
+    // reloads indices should be based on the pre-update state according to 33´37 into https://developer.apple.com/videos/play/wwdc2018/225/
+    group.enter()
+    UIView.performWithoutAnimation { // recommended since reloads are never animated anyway (see 37´10 into https://developer.apple.com/videos/play/wwdc2018/225/)
+        performBatchUpdates({
+            reloads(changesWithIndexPath: changesWithIndexPath)
+        }, completion: { finished in
+            reloadFinished = finished
+            group.leave()
+        })
+    }
+
+    group.enter()
     performBatchUpdates({
-      updateData()
-      insideUpdate(changesWithIndexPath: changesWithIndexPath)
+        updateData()
+        rearranges(changesWithIndexPath: changesWithIndexPath)
     }, completion: { finished in
-      completion?(finished)
+        insertDeleteMoveFinished = finished
+        group.leave()
     })
 
-    // reloadRows needs to be called outside the batch
-    outsideUpdate(changesWithIndexPath: changesWithIndexPath)
+    group.notify(queue: .main) {
+        completion?(reloadFinished && insertDeleteMoveFinished)
+    }
   }
-  
+
   // MARK: - Helper
-  
-  private func insideUpdate(changesWithIndexPath: ChangeWithIndexPath) {
+
+  private func rearranges(changesWithIndexPath: ChangeWithIndexPath) {
     changesWithIndexPath.deletes.executeIfPresent {
       deleteItems(at: $0)
     }
-    
+
     changesWithIndexPath.inserts.executeIfPresent {
       insertItems(at: $0)
     }
-    
+
     changesWithIndexPath.moves.executeIfPresent {
       $0.forEach { move in
         moveItem(at: move.from, to: move.to)
@@ -55,10 +73,11 @@ public extension UICollectionView {
     }
   }
 
-  private func outsideUpdate(changesWithIndexPath: ChangeWithIndexPath) {
+  private func reloads(changesWithIndexPath: ChangeWithIndexPath) {
     changesWithIndexPath.replaces.executeIfPresent {
       self.reloadItems(at: $0)
     }
   }
 }
+
 #endif

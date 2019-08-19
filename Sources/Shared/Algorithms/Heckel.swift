@@ -261,7 +261,7 @@ public final class Heckel<T: DiffAware> {
             changes.append(.replace(Replace(
               oldItem: old[oldIndex],
               newItem: new[newTuple.offset],
-              index: newTuple.offset
+              index: oldIndex
             )))
           }
 
